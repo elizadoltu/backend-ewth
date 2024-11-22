@@ -394,6 +394,7 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+coverage/
 
 # JetBrains Rider
 *.sln.iml
