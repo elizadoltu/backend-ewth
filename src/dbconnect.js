@@ -7,7 +7,9 @@ dotenv.config();
 export const client = new MongoClient(process.env.CONNECTION_STRING, {
     serverApi: ServerApiVersion.v1,
     ssl: true,
-    tlsAllowInvalidCertificates: false,
+    tls: true,
+    retryWrites: true,
+    tlsInsecure: false,
 });
 
 (async () => {
