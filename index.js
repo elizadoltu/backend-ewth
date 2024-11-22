@@ -5,7 +5,11 @@ import cors from 'cors';
 const app = express();
 const PORT = 3333;
 
-app.use(cors());
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type']
+}));
 app.use(express.json());
 app.use((req, res, next) => {
     const now = new Date();
