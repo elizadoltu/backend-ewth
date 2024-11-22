@@ -1,4 +1,3 @@
-// dbconnect.js
 import { MongoClient, ServerApiVersion } from 'mongodb';
 import dotenv from 'dotenv';
 
@@ -18,5 +17,6 @@ export const client = new MongoClient(process.env.CONNECTION_STRING, {
         console.log("Connected to MongoDB");
     } catch (err) {
         console.error("MongoDB connection error:", err);
+        process.exit(1); 
     }
 })();
