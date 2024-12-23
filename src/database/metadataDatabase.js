@@ -51,7 +51,7 @@ const htmlFilesTable = async () => {
     }
 };
 
-const cssFiles = async () => {
+const cssFilesTable = async () => {
     const query = `
     CREATE TABLE IF NOT EXISTS cssFiles (
         id SERIAL PRIMARY KEY,
@@ -68,7 +68,7 @@ const cssFiles = async () => {
     }
 };
 
-const jsFiles = async () => {
+const jsFilesTable = async () => {
     const query = `
     CREATE TABLE IF NOT EXISTS jsFiles (
         id SERIAL PRIMARY KEY,
@@ -86,12 +86,16 @@ const jsFiles = async () => {
 };
 
 const createMetadataTables = async () => {
-    await submissionsTable();
-    await htmlFilesTable();
-    await cssFiles();
-    await jsFiles();
-
-    pool.end(); 
+    try {
+        await submissionsTable(); 
+        await htmlFilesTable();
+        await cssFilesTable();
+        await jsFilesTable();
+      } catch (err) {
+        console.error("Error creating tables:", err);
+      } finally {
+        await pool.end(); 
+      } 
 };
 
 export default createMetadataTables;
