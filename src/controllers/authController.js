@@ -6,8 +6,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const privateKey = fs.readFileSync(process.env.PRIVATE_KEY_PATH, 'utf8');
-const publicKey = fs.readFileSync(process.env.PUBLIC_KEY_PATH, 'utf8');
+const privateKey = process.env.PRIVATE_KEY_PATH;
+const publicKey = process.env.PUBLIC_KEY_PATH;
 
 const generateRefreshToken = async (userId) => {
     const token = jwt.sign({}, privateKey, {

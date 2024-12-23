@@ -1,19 +1,9 @@
 import jwt from 'jsonwebtoken';
-import fs from 'fs';
-import path from 'path';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-// Resolve the full path of the public key using path.resolve
-const publicKeyPath = path.resolve(process.cwd(), process.env.PUBLIC_KEY_PATH);
-
-if (!fs.existsSync(publicKeyPath)) {
-    console.error('Public key file not found:', publicKeyPath);
-    process.exit(1); // Exit the application if the file is not found
-}
-
-const publicKey = fs.readFileSync(publicKeyPath, 'utf8');
+const publicKey = process.env.PUBLIC_KEY;
 
 export const authMiddleware = (req, res, next) => {
     // Bearer token
