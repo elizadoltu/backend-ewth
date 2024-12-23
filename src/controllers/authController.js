@@ -2,6 +2,9 @@ import jwt from 'jsonwebtoken';
 import fs from 'fs';
 import model from '../models/User.js';
 import tokenModel from '../models/RefreshToken.js';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const privateKey = fs.readFileSync(process.env.PRIVATE_KEY_PATH, 'utf8');
 const publicKey = fs.readFileSync(process.env.PUBLIC_KEY_PATH, 'utf8');
