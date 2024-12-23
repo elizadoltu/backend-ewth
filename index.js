@@ -10,7 +10,7 @@ import errorHandler from './src/utils/errorHandler.js';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3333;
+const PORT = 3333;
 
 connectUserDB();
 
