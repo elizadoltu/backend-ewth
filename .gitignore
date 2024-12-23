@@ -395,6 +395,8 @@ FodyWeavers.xsd
 *.msm
 *.msp
 coverage/
+.env 
 
+src/keys/
 # JetBrains Rider
 *.sln.iml

@@ -1,0 +1,107 @@
+import jwt from 'jsonwebtoken';
+import fs from 'fs';
+import model from '../models/User.js';
+import tokenModel from '../models/RefreshToken.js';
+
+const privateKey = fs.readFileSync(process.env.PRIVATE_KEY_PATH, 'utf8');
+const publicKey = fs.readFileSync(process.env.PUBLIC_KEY_PATH, 'utf8');
+
+const generateRefreshToken = async (userId) => {
+    const token = jwt.sign({}, privateKey, {
+        algorithm: 'RS256',
+        expiresIn: '7d',
+    });
+
+    const refreshToken = new tokenModel({
+        token, 
+        user: userId,
+        expiresIn: new Date(Dtae.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+
+    await refreshToken.save();
+    return token;
+};
+
+export const refreshToken = async (req, res) => {
+    const { token } = req.body;
+
+    if (!token) return res.status(400).json({ message: 'Refresh token expired.' });
+
+    try {
+        // Find the refresh token in the database
+        const refreshToken = await tokenModel.findOne({ token }).populate('user');
+        if (!refreshToken || refreshToken.expiresAt < Date.now()) {
+            return res.status(401).json({ message: 'Invalid or expired refresh token.' });
+        }
+
+        // Generate a new access token
+        const payload = { id: refreshToken.user._id, username: refreshToken.user.username };
+        const accessToken = jwt.sign(payload, privateKey, {
+            algorithm: 'RS256',
+            expiresIn: process.env.JWT_EXPIRATION,
+        });
+
+        res.json({ accessToken });
+    } catch (error) {
+        res.status(500).json({ message: 'Internal server error', error });
+    }
+};
+
+export const register = async (req, res) => {
+    const { username, password } = req.body;
+
+    try {
+        const existingUser = await model.findOne({ username });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Username already exists' });
+        }
+
+        const user = new model({ username, password });
+        await user.save();
+
+        res.status(201).json({ message: 'User registered successfully' });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Internal server error', error });
+    }
+};
+
+export const login = async (req, res) => {
+    const { username, password } = req.body;
+
+    try {
+        const user = await model.findOne({ username });
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Validate password
+        const isPasswordValid = await user.comparePassword(password);
+        if (!isPasswordValid) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Create JWT 
+        const payload = { id: user._id, username: user.username };
+        const token = jwt.sign(payload, privateKey, {
+            algorithm: 'RS256',
+            expiresIn: process.env.JWT_EXPIRATION
+        });
+
+        res.json({ token });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Internal server error', error });
+    }
+};
+
+export const logout = async (req, res) => {
+    const { token } = req.body;
+
+    try {
+        await tokenModel.findOneAndDelete({ token });
+        res.json({ message: 'Logged out successfully.' });
+    } catch (error) {
+        res.status(500).json({ message: 'Internal server error', error });
+    }
+};
