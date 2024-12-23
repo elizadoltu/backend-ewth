@@ -6,6 +6,8 @@ import bodyParser from 'body-parser';
 import authRoutes from './src/routes/authRoutes.js';
 import { connectUserDB } from './src/database/userDatabase.js';
 import errorHandler from './src/utils/errorHandler.js';
+import userGameProgressTable from './src/database/checkpointDatabase.js';
+import createMetadataTables from './src/database/metadataDatabase.js';
 
 dotenv.config();
 
@@ -13,6 +15,8 @@ const app = express();
 const PORT = 3333;
 
 connectUserDB();
+userGameProgressTable();
+createMetadataTables();
 
 app.use(cors({
     origin: 'https://everything-with-the-unknown-app.net',

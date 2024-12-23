@@ -44,7 +44,10 @@ export const refreshToken = async (req, res) => {
             expiresIn: process.env.JWT_EXPIRATION,
         });
 
-        res.json({ accessToken });
+        const newRefreshToken = await generateRefreshToken(refreshToken.user._id);
+        await tokenModel.findByIdAndDelete(refreshToken._id);
+
+        res.json({ accessToken, refreshToken: newRefreshToken });
     } catch (error) {
         res.status(500).json({ message: 'Internal server error', error });
     }
@@ -91,7 +94,9 @@ export const login = async (req, res) => {
             expiresIn: process.env.JWT_EXPIRATION
         });
 
-        res.json({ token });
+        const refreshToken = await generateRefreshToken(user._id);
+
+        res.json({ token, refreshToken });
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: 'Internal server error', error });
