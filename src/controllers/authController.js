@@ -6,8 +6,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const privateKey = process.env.PRIVATE_KEY_PATH;
-const publicKey = process.env.PUBLIC_KEY_PATH;
+const privateKey = process.env.PRIVATE_KEY_PATH.replace(/\\n/g, '\n');
+const publicKey = process.env.PUBLIC_KEY_PATH.replace(/\\n/g, '\n');
 
 const generateRefreshToken = async (userId) => {
     const token = jwt.sign({}, privateKey, {

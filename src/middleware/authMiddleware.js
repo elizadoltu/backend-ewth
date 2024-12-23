@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const publicKey = process.env.PUBLIC_KEY;
+const publicKey = process.env.PUBLIC_KEY_PATH.replace(/\\n/g, '\n');
 
 export const authMiddleware = (req, res, next) => {
     // Bearer token
