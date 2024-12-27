@@ -19,7 +19,7 @@ const generateRefreshToken = async (userId) => {
     const refreshToken = new tokenModel({
         token, 
         user: userId,
-        expiresIn: new Date(Dtae.now() + 7 * 24 * 60 * 60 * 1000),
+        expiresIn: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
 
     await refreshToken.save();
