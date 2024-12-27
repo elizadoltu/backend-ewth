@@ -29,7 +29,7 @@ const generateRefreshToken = async (userId) => {
 export const googleLogin = async (req, res) => {
     try {
         const redirectUrl = 'https://backend-ewth-production.up.railway.app/api/auth/google-callback';
-        const googleAuthUrl = process.env.APPWRITE_ENDPOINT;
+        const googleAuthUrl = `${process.env.APPWRITE_ENDPOINT}&success=${redirectUrl}&failure=${redirectUrl}`;
         res.redirect(googleAuthUrl);
     } catch (error) {
         res.status(500).json({ message: 'Google Login failed', error });
