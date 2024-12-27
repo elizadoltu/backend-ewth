@@ -3,6 +3,7 @@ import fs from 'fs';
 import model from '../models/User.js';
 import tokenModel from '../models/RefreshToken.js';
 import dotenv from 'dotenv';
+import { account } from '../utils/client.js';
 
 dotenv.config();
 
@@ -23,6 +24,39 @@ const generateRefreshToken = async (userId) => {
 
     await refreshToken.save();
     return token;
+};
+
+export const googleLogin = async (req, res) => {
+    try {
+        account.createOAuth2Session('google');
+    } catch (error) {
+        res.status(500).json({ message: 'Google Login Failed', error });
+    }
+}
+
+export const googleCallback = async (req, res) => {
+    try {
+        const session = await account.getSession('current');
+        const user = await account.get();
+
+        let existingUser = await model.findOne({ email: user.email });
+        if (!existingUser) {
+            existingUser = new model({ username: user.name, email: user.email });
+            await existingUser.save();
+        }
+
+        const payload = { id: existingUser._id, username: existingUser.username };
+        const accessToken = jwt.sign(payload, privateKey, {
+            algorithm: 'RS256',
+            expiresIn: process.env.JWT_EXPIRATION,
+        });
+
+        const refreshToken = await generateRefreshToken(existingUser._id);
+
+        res.json({ token: accessToken, refreshToken });
+    } catch (error) {
+        res.status(500).json({ message: 'Google Callback failed', error });
+    }
 };
 
 export const refreshToken = async (req, res) => {
