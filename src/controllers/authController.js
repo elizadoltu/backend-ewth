@@ -29,7 +29,6 @@ const generateRefreshToken = async (userId) => {
 export const googleLogin = async (req, res) => {
     try {
         const session = await account.createOAuth2Session(OAuthProvider.Google);
-        res.redirect(session.providerUrl); 
     } catch (error) {
         res.status(500).json({ message: 'Google Login failed', error });
     }
