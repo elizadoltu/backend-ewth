@@ -3,7 +3,7 @@ import fs from 'fs';
 import model from '../models/User.js';
 import tokenModel from '../models/RefreshToken.js';
 import dotenv from 'dotenv';
-import { account } from '../utils/client.js';
+import { account, OAuthProvider } from '../utils/client.js';
 
 dotenv.config();
 
@@ -28,39 +28,43 @@ const generateRefreshToken = async (userId) => {
 
 export const googleLogin = async (req, res) => {
     try {
-        const redirectUrl = 'https://backend-ewth-production.up.railway.app/api/auth/google-callback';
-        const googleAuthUrl = `${process.env.APPWRITE_ENDPOINT}&success=${redirectUrl}&failure=${redirectUrl}`;
-        res.redirect(googleAuthUrl);
+        const session = await account.createOAuth2Session(OAuthProvider.Google);
+        res.redirect(session.providerUrl); 
     } catch (error) {
         res.status(500).json({ message: 'Google Login failed', error });
     }
 };
 
-
 export const googleCallback = async (req, res) => {
     try {
-        const session = await account.getSession('current');
-        const user = await account.get();
+        const userDetails = await account.get();
+        let user = await model.findOne({ email: userDetails.email });
 
-        let existingUser = await model.findOne({ email: user.email });
-        if (!existingUser) {
-            existingUser = new model({ username: user.name, email: user.email });
-            await existingUser.save();
+        if (!user) {
+            user = new model({
+                username: userDetails.name,
+                email: userDetails.email
+            });
+            await user.save();
         }
 
-        const payload = { id: existingUser._id, username: existingUser.username };
+        const payload = { id: user._id, username: user.username };
         const accessToken = jwt.sign(payload, privateKey, {
             algorithm: 'RS256',
             expiresIn: process.env.JWT_EXPIRATION,
         });
-
-        const refreshToken = await generateRefreshToken(existingUser._id);
-
-        res.json({ token: accessToken, refreshToken });
+        const refreshToken = await generateRefreshToken(user._id);
+        res.json({
+            message: 'Google login successful',
+            user: { username: user.username, email: user.email },
+            token: accessToken,
+            refreshToken,
+        });
     } catch (error) {
         res.status(500).json({ message: 'Google Callback failed', error });
     }
-};
+}
+
 
 export const refreshToken = async (req, res) => {
     const { token } = req.body;
@@ -75,7 +79,7 @@ export const refreshToken = async (req, res) => {
         }
 
         // Generate a new access token
-        const payload = { id: refreshToken.user._id, username: refreshToken.user.username };
+        const payload = { id: refreshToken.user._id, username: refreshToken.user.username, email: refreshToken.user.email };
         const accessToken = jwt.sign(payload, privateKey, {
             algorithm: 'RS256',
             expiresIn: process.env.JWT_EXPIRATION,
@@ -91,15 +95,15 @@ export const refreshToken = async (req, res) => {
 };
 
 export const register = async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password, email } = req.body;
 
     try {
-        const existingUser = await model.findOne({ username });
+        const existingUser = await model.findOne({ username, email });
         if (existingUser) {
             return res.status(400).json({ message: 'Username already exists' });
         }
 
-        const user = new model({ username, password });
+        const user = new model({ username, password, email });
         await user.save();
 
         res.status(201).json({ message: 'User registered successfully' });
@@ -110,10 +114,10 @@ export const register = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password, email } = req.body;
 
     try {
-        const user = await model.findOne({ username });
+        const user = await model.findOne({ username, email });
         if (!user) {
             return res.status(401).json({ message: 'Invalid credentials' });
         }
@@ -125,7 +129,7 @@ export const login = async (req, res) => {
         }
 
         // Create JWT 
-        const payload = { id: user._id, username: user.username };
+        const payload = { id: user._id, username: user.username, email: user.email };
         const token = jwt.sign(payload, privateKey, {
             algorithm: 'RS256',
             expiresIn: process.env.JWT_EXPIRATION

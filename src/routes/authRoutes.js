@@ -12,8 +12,8 @@ router.get('/admin', [authMiddleware, roleMiddleware(['admin'])], (req, res) => 
     res.json({ message: 'Welcome, admin!' });
 });
 
-router.get('/google-login', googleLogin);
-router.get('/google-callback', googleCallback);
+router.get('/google', googleLogin);
+router.get('/google/callback', googleCallback);
 
 router.get('/protected', authMiddleware, (req, res) => {
     res.json({ message: `Hello ${req.user.username}, you have access to this route!` });
