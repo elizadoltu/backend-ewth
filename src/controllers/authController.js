@@ -85,10 +85,70 @@ export const register = async (req, res) => {
         });
 
         const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Email Verification',
-            text: `Hello ${username},\n\nPlease use the following code to verify your email address: ${verificationCode}\n\nBest regards,\nEverything With The Unknown`,
+            from: 'Everything With The Unknown',
+    to: email,
+    subject: 'Email Verification',
+    text: `Hello ${username},\n\nPlease use the following code to verify your email address: ${verificationCode}\n\nBest regards,\nEverything With The Unknown`,
+    html: `
+        <html>
+            <head>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        color: #333;
+                        margin: 0;
+                        padding: 0;
+                        background-color: #f4f4f4;
+                    }
+                    .container {
+                        width: 100%;
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: #ffffff;
+                        padding: 20px;
+                        border-radius: 8px;
+                    }
+                    h1 {
+                        color: #0056b3;
+                        font-size: 24px;
+                        margin-bottom: 10px;
+                    }
+                    p {
+                        font-size: 16px;
+                        line-height: 1.6;
+                    }
+                    .footer {
+                        font-size: 14px;
+                        color: #999;
+                        margin-top: 20px;
+                    }
+                    .cta {
+                        display: inline-block;
+                        background-color: #28a745;
+                        color: white;
+                        padding: 10px 20px;
+                        font-size: 16px;
+                        border-radius: 5px;
+                        text-decoration: none;
+                        margin-top: 20px;
+                    }
+                    a {
+                        color: #007bff;
+                        text-decoration: none;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>Hi, ${username}!</h1>
+                    <p>Your verification code is: <strong>${verificationCode}</strong></p>
+                    <p>Enter this code on our website to activate your account.</p>
+                    <p>If you have any questions, don't hesitate to <a href="mailto:everythingwithunknowninfo@gmail.com">contact us</a>.</p>
+                    <p class="footer">Best regards,<br>Everything With The Unknown</p>
+                </div>
+            </body>
+        </html>
+    `,
         };
 
         await transporter.sendMail(mailOptions);
@@ -214,10 +274,70 @@ export const verifyEmail = async (req, res) => {
         });
 
         const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject: 'Account Created Successfully',
-            text: `Hello ${user.username},\n\nYour account has been successfully created and verified! You can now log in and start using our services.\n\nThank you for joining us!\n\nBest regards,\nYour Company Name`,
+            from: 'Everything With The Unknown',
+    to: email,
+    subject: 'Account Created Successfully',
+    text: `Hello ${user.username},\n\nYour account has been successfully created and verified! You can now log in and start using our services.\n\nThank you for joining us!\n\nBest regards,\nEverything With The Unknown`,
+    html: `
+        <html>
+            <head>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        color: #333;
+                        margin: 0;
+                        padding: 0;
+                        background-color: #f4f4f4;
+                    }
+                    .container {
+                        width: 100%;
+                        max-width: 600px;
+                        margin: 0 auto;
+                        background-color: #ffffff;
+                        padding: 20px;
+                        border-radius: 8px;
+                    }
+                    h1 {
+                        color: #0056b3;
+                        font-size: 24px;
+                        margin-bottom: 10px;
+                    }
+                    p {
+                        font-size: 16px;
+                        line-height: 1.6;
+                    }
+                    .footer {
+                        font-size: 14px;
+                        color: #999;
+                        margin-top: 20px;
+                    }
+                    .cta {
+                        display: inline-block;
+                        background-color: #007bff;
+                        color: white;
+                        padding: 10px 20px;
+                        font-size: 16px;
+                        border-radius: 5px;
+                        text-decoration: none;
+                        margin-top: 20px;
+                    }
+                    a {
+                        color: #007bff;
+                        text-decoration: none;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <h1>Hello ${user.username},</h1>
+                    <p>Your account has been successfully created and verified!</p>
+                    <p>You can now log in and start using our services.</p>
+                    <p>Thank you for joining us!</p>
+                    <p class="footer">Best regards,<br>Everything With The Unknown</p>
+                </div>
+            </body>
+        </html>
+    `,
         };
 
         await transporter.sendMail(mailOptions);
