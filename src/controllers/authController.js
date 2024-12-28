@@ -4,6 +4,7 @@ import model from '../models/User.js';
 import tokenModel from '../models/RefreshToken.js';
 import dotenv from 'dotenv';
 import { account, OAuthProvider } from '../utils/client.js';
+import nodemailer from 'nodemailer';
 
 dotenv.config();
 
@@ -25,44 +26,6 @@ const generateRefreshToken = async (userId) => {
     await refreshToken.save();
     return token;
 };
-
-export const googleLogin = async (req, res) => {
-    try {
-        const session = await account.createOAuth2Session(OAuthProvider.Google);
-    } catch (error) {
-        res.status(500).json({ message: 'Google Login failed', error });
-    }
-};
-
-export const googleCallback = async (req, res) => {
-    try {
-        const userDetails = await account.get();
-        let user = await model.findOne({ email: userDetails.email });
-
-        if (!user) {
-            user = new model({
-                username: userDetails.name,
-                email: userDetails.email
-            });
-            await user.save();
-        }
-
-        const payload = { id: user._id, username: user.username };
-        const accessToken = jwt.sign(payload, privateKey, {
-            algorithm: 'RS256',
-            expiresIn: process.env.JWT_EXPIRATION,
-        });
-        const refreshToken = await generateRefreshToken(user._id);
-        res.json({
-            message: 'Google login successful',
-            user: { username: user.username, email: user.email },
-            token: accessToken,
-            refreshToken,
-        });
-    } catch (error) {
-        res.status(500).json({ message: 'Google Callback failed', error });
-    }
-}
 
 
 export const refreshToken = async (req, res) => {
@@ -94,21 +57,42 @@ export const refreshToken = async (req, res) => {
 };
 
 export const register = async (req, res) => {
-    const { username, password, email } = req.body;
-
+    const { username, email, password } = req.body;
     try {
-        const existingUser = await model.findOne({ username, email });
+        const existingUser = await model.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ message: 'Username already exists' });
+            return res.status(400).json({ message: 'Email already exists' });
         }
 
-        const user = new model({ username, password, email });
-        await user.save();
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-        res.status(201).json({ message: 'User registered successfully' });
+        const newUser = new model({
+            username, 
+            email,
+            password,
+            verificationCode,
+            isVerified: false,
+        });
+        await newUser.save();
+
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASSWORD,
+            },
+        });
+
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Your verification code',
+            text: `Your verification code is: ${verificationCode}`,
+        });
+
+        res.status(201).json({ message: 'Verification email sent!' });
     } catch (error) {
-        console.log(error);
-        res.status(500).json({ message: 'Internal server error', error });
+        res.status(500).json({ message: 'Internal server error', errro });
     }
 };
 
@@ -149,6 +133,73 @@ export const logout = async (req, res) => {
     try {
         await tokenModel.findOneAndDelete({ token });
         res.json({ message: 'Logged out successfully.' });
+    } catch (error) {
+        res.status(500).json({ message: 'Internal server error', error });
+    }
+};
+
+export const googleRegister = async (req, res) => {
+    const { username, email } = req.body;
+    try {
+        const existingUser = await model.findOne({ username, email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Username already existis' });
+        }
+
+        const user = new model({ username, email });
+        await user.save();
+
+        res.status(201).json({ message: 'User registered successfully' });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Internal server error', error });
+    }
+}
+
+export const googleLogin = async (req, res) => {
+    const { username, email } = req.body;
+    try {
+        const user = await model.findOne({ username, email });
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Create JWT
+        const payload = { id: user._id, username: user.username, email: user.email };
+        const token = jwt.sign(payload, privateKey, {
+            algorithm: 'RS256',
+            expiresIn: process.env.JWT_EXPIRATION
+        });
+
+        const refreshToken = await generateRefreshToken(user._id);
+
+        res.json({ token, refreshToken });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: 'Internal server error', error });
+    }
+};
+
+export const verifiyEmail = async (req, res) => {
+    const { email, verificationCode } = req.body;
+    try {
+        const user = await model.findOne({ email, verificationCode });
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid code or email' });
+        }
+
+        user.isVerified = true;
+        user.verificationCode = null;
+        await user.save();
+
+        const payload = { id: user._id, username: user.username, email: user.email };
+        const token = jwt.sign(payload, privateKey, {
+            algorithm: 'RS256',
+            expiresIn: process.env.JWT_EXPIRATION,
+        });
+
+        const refreshToken = await generateRefreshToken(user._id);
+        res.json({ message: 'Email verified successfully', token, refreshToken });
     } catch (error) {
         res.status(500).json({ message: 'Internal server error', error });
     }

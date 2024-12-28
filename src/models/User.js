@@ -16,6 +16,18 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
+    isVerified: {
+        type: Boolean,
+        default: false, 
+    },
+    verificationCode: {
+        type: String, 
+    },
+    // Optionally add a refreshToken field if needed
+    // refreshToken: {
+    //     type: String,
+    //     default: ''
+    // }
 });
 
 userSchema.pre('save', async function (next) {
