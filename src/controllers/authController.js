@@ -3,7 +3,6 @@ import fs from 'fs';
 import model from '../models/User.js';
 import tokenModel from '../models/RefreshToken.js';
 import dotenv from 'dotenv';
-import { account, OAuthProvider } from '../utils/client.js';
 import nodemailer from 'nodemailer';
 
 dotenv.config();
@@ -92,7 +91,7 @@ export const register = async (req, res) => {
 
         res.status(201).json({ message: 'Verification email sent!' });
     } catch (error) {
-        res.status(500).json({ message: 'Internal server error', errro });
+        res.status(500).json({ message: 'Internal server error', erroR });
     }
 };
 
