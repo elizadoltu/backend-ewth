@@ -4,6 +4,7 @@ import model from '../models/User.js';
 import tokenModel from '../models/RefreshToken.js';
 import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
+import crypto from 'crypto';
 
 dotenv.config();
 
