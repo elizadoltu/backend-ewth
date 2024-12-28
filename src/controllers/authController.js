@@ -65,7 +65,7 @@ export const register = async (req, res) => {
             return res.status(400).json({ message: 'Email already exists' });
         }
 
-        const verificationCode = crypto.randomBytes(20).toString('hex');
+        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
         const newUser = new model({
             username, 
