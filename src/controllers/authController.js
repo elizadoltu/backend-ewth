@@ -57,13 +57,14 @@ export const refreshToken = async (req, res) => {
 
 export const register = async (req, res) => {
     const { username, email, password } = req.body;
+
     try {
         const existingUser = await model.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: 'Email already exists' });
         }
 
-        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const verificationCode = crypto.randomBytes(20).toString('hex');
 
         const newUser = new model({
             username, 
@@ -82,16 +83,19 @@ export const register = async (req, res) => {
             },
         });
 
-        await transporter.sendMail({
+        const mailOptions = {
             from: process.env.EMAIL_USER,
             to: email,
-            subject: 'Your verification code',
-            text: `Your verification code is: ${verificationCode}`,
-        });
+            subject: 'Email Verification',
+            text: `Hello ${username},\n\nPlease use the following code to verify your email address: ${verificationCode}\n\nBest regards,\nEverything With The Unknown`,
+        };
 
-        res.status(201).json({ message: 'Verification email sent!' });
+        await transporter.sendMail(mailOptions);
+
+        res.status(201).json({ message: 'Registration successful! Please check your email to verify your account.' });
+
     } catch (error) {
-        res.status(500).json({ message: 'Internal server error', erroR });
+        res.status(500).json({ message: 'Internal server error', error });
     }
 };
 
@@ -179,8 +183,9 @@ export const googleLogin = async (req, res) => {
     }
 };
 
-export const verifiyEmail = async (req, res) => {
+export const verifyEmail = async (req, res) => {
     const { email, verificationCode } = req.body;
+
     try {
         const user = await model.findOne({ email, verificationCode });
         if (!user) {
@@ -198,7 +203,25 @@ export const verifiyEmail = async (req, res) => {
         });
 
         const refreshToken = await generateRefreshToken(user._id);
+
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASSWORD,
+            },
+        });
+
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Account Created Successfully',
+            text: `Hello ${user.username},\n\nYour account has been successfully created and verified! You can now log in and start using our services.\n\nThank you for joining us!\n\nBest regards,\nYour Company Name`,
+        };
+
+        await transporter.sendMail(mailOptions);
         res.json({ message: 'Email verified successfully', token, refreshToken });
+
     } catch (error) {
         res.status(500).json({ message: 'Internal server error', error });
     }
