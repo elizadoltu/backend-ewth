@@ -27,6 +27,9 @@ router.get('/auth/google', (req, res) => {
         scope: ['profile', 'email'],
     });
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+res.setHeader('Access-Control-Allow-Origin', 'https://everything-with-the-unknown-app.net');
+res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cross-Origin-Opener-Policy');
+
     res.redirect(authUrl);
 });
 

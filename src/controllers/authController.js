@@ -241,6 +241,9 @@ export const googleRegister = async (req, res) => {
 
 export const googleCallback = async (req, res) => {
     res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+res.setHeader('Access-Control-Allow-Origin', 'https://everything-with-the-unknown-app.net');
+res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cross-Origin-Opener-Policy');
+
   const client = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,

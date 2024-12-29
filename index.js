@@ -21,7 +21,7 @@ createMetadataTables();
 app.use(cors({
     origin: ['https://everything-with-the-unknown-app.net', 'http://localhost:5173'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type']
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cross-Origin-Opener-Policy']
 }));
 app.use(bodyParser.json());
 app.use((req, res, next) => {
