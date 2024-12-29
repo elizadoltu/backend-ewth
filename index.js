@@ -29,6 +29,12 @@ app.use((req, res, next) => {
     console.log(`[${now.toISOString()}] - Connection from IP: ${req.ip} - URL: ${req.originalUrl}`);
     next();
 })
+app.use((req, res, next) => {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp'); // Optional, for shared buffers
+    next();
+  });
+  
 app.use('/api/auth', authRoutes);
 app.use(errorHandler);
 
