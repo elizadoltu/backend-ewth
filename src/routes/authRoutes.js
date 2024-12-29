@@ -26,7 +26,7 @@ router.get('/auth/google', (req, res) => {
         prompt: 'consent',
         scope: ['profile', 'email'],
     });
-
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
     res.redirect(authUrl);
 });
 

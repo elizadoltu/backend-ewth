@@ -240,13 +240,14 @@ export const googleRegister = async (req, res) => {
 };
 
 export const googleCallback = async (req, res) => {
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
   const client = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
     process.env.GOOGLE_REDIRECT_URI
   );
 
-  const { code } = req.body;
+  const { code } = req.query;
 
   try {
     const response = await fetch(`https://oauth2.googleapis.com/token`, {
@@ -268,7 +269,7 @@ export const googleCallback = async (req, res) => {
     }
     const ticket = await client.verifyIdToken({
       idToken: id_token,
-      audience: process.env.GOOGLE_CLIENT_ID, // Your Google Client ID
+      audience: process.env.GOOGLE_CLIENT_ID, 
     });
     const { email, name } = ticket.getPayload();
     let user = await model.findOne({ email });
