@@ -15,25 +15,6 @@ router.get('/admin', [authMiddleware, roleMiddleware(['admin'])], (req, res) => 
 });
 router.post('/verify-email', verifyEmail);
 
-router.post('/auth/google', (req, res) => {
-    const oauth2Client = new OAuth2Client(
-        process.env.GOOGLE_CLIENT_ID,
-        process.env.GOOGLE_CLIENT_SECRET,
-        process.env.GOOGLE_REDIRECT_URI
-    );
-
-    const authUrl = oauth2Client.generateAuthUrl({
-        access_type: 'offline',
-        prompt: 'consent',
-        scope: ['profile', 'email'],
-    });
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-res.setHeader('Access-Control-Allow-Origin', 'https://everything-with-the-unknown-app.net');
-res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cross-Origin-Opener-Policy');
-
-    res.redirect(authUrl);
-});
-
 router.get('/auth/google/callback', googleCallback);
 
 router.get('/protected', authMiddleware, (req, res) => {
