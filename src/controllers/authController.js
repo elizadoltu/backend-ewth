@@ -240,9 +240,15 @@ export const googleRegister = async (req, res) => {
 };
 
 export const googleCallback = async (req, res) => {
-    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-res.setHeader('Access-Control-Allow-Origin', 'https://everything-with-the-unknown-app.net');
-res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cross-Origin-Opener-Policy');
+  const allowedOrigins = [
+    'https://everything-with-the-unknown-app.net',
+    'http://localhost:5173'
+];
+const origin = req.headers.origin;
+if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups')
+}
 
 try {
   // Get the authorization code from the frontend

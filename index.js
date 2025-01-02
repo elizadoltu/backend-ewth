@@ -18,6 +18,7 @@ connectUserDB();
 userGameProgressTable();
 createMetadataTables();
 
+
 app.use(cors({
     origin: ['https://everything-with-the-unknown-app.net', 'http://localhost:5173'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
