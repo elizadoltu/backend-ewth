@@ -19,21 +19,32 @@ userGameProgressTable();
 createMetadataTables();
 
 
-app.use(cors({
-    origin: ['https://everything-with-the-unknown-app.net', 'http://localhost:5173'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cross-Origin-Opener-Policy']
-}));
+app.use((req, res, next) => {
+    const allowedOrigins = ['https://everything-with-the-unknown-app.net', 'http://localhost:5173'];
+    const origin = req.headers.origin;
+
+    if (allowedOrigins.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin);
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        // Remove this header to avoid blocking `window.postMessage`
+        // res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+    }
+
+    if (req.method === 'OPTIONS') {
+        return res.sendStatus(204); // Handle preflight requests
+    }
+
+    next();
+});
+
 app.use(bodyParser.json());
 app.use((req, res, next) => {
     const now = new Date();
     console.log(`[${now.toISOString()}] - Connection from IP: ${req.ip} - URL: ${req.originalUrl}`);
     next();
 })
-app.use((req, res, next) => {
-    res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp'); // Optional, for shared buffers
-    next();
-  });
+
   
 app.use('/api/auth', authRoutes);
 app.use(errorHandler);
