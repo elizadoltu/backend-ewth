@@ -5,6 +5,7 @@ import roleMiddleware from '../middleware/roleMiddleware.js';
 import { OAuth2Client } from 'google-auth-library';
 
 const router = express.Router();
+const oauth2Client = new OAuth2Client();
 
 router.post('/login', login);
 router.post('/logout', logout);
@@ -14,7 +15,7 @@ router.get('/admin', [authMiddleware, roleMiddleware(['admin'])], (req, res) => 
 });
 router.post('/verify-email', verifyEmail);
 
-router.get('/auth/google', (req, res) => {
+router.post('/auth/google', (req, res) => {
     const oauth2Client = new OAuth2Client(
         process.env.GOOGLE_CLIENT_ID,
         process.env.GOOGLE_CLIENT_SECRET,

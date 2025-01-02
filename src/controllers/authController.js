@@ -244,65 +244,81 @@ export const googleCallback = async (req, res) => {
 res.setHeader('Access-Control-Allow-Origin', 'https://everything-with-the-unknown-app.net');
 res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cross-Origin-Opener-Policy');
 
-  const client = new OAuth2Client(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI
+try {
+  // Get the authorization code from the frontend
+  const code = req.headers.authorization;
+  console.log('Authorization Code:', code);
+
+  // Exchange the authorization code for an access token
+  const response = await axios.post(
+      'https://oauth2.googleapis.com/token',
+      {
+          code,
+          client_id: process.env.GOOGLE_CLIENT_ID,
+          client_secret: process.env.GOOGLE_CLIENT_SECRET,
+          redirect_uri: 'postmessage',
+          grant_type: 'authorization_code'
+      }
   );
 
-  const { code } = req.query;
+  const accessToken = response.data.access_token;
+  const idToken = response.data.id_token;
 
-  try {
-    const response = await fetch(`https://oauth2.googleapis.com/token`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        code,
-        client_id: process.env.GOOGLE_CLIENT_ID,
-        client_secret: process.env.GOOGLE_CLIENT_SECRET,
-        redirect_uri: process.env.GOOGLE_REDIRECT_URI,
-        grant_type: "authorization_code",
-      }),
-    });
-    const { id_token, access_token } = await response.json();
-    if (!id_token) {
-      return res.status(400).json({ message: "Failed to get id_token" });
-    }
-    const ticket = await client.verifyIdToken({
-      idToken: id_token,
-      audience: process.env.GOOGLE_CLIENT_ID, 
-    });
-    const { email, name } = ticket.getPayload();
-    let user = await model.findOne({ email });
+  if (!idToken) {
+      return res.status(400).json({ message: 'Failed to retrieve ID token' });
+  }
 
-    if (!user) {
+  console.log('Access Token:', accessToken);
+
+  // Verify and decode the ID token to get user details
+  const ticket = await axios.get(
+      'https://www.googleapis.com/oauth2/v3/userinfo',
+      {
+          headers: {
+              Authorization: `Bearer ${accessToken}`
+          }
+      }
+  );
+
+  const userDetails = ticket.data;
+  const { email, name } = userDetails;
+  console.log('User Details:', userDetails);
+
+  // Check if user exists in the database or create a new one
+  let user = await model.findOne({ email });
+
+  if (!user) {
       user = new model({ email, username: name });
       await user.save();
+      console.log('User registered:', user);
+  } else {
+      console.log('User logged in:', user);
+  }
 
-      console.log("User registered: ", user);
-    } else {
-      console.log("User logged in: ", user);
-    }
-
-    const payload = {
+  // Generate JWT token
+  const payload = {
       id: user._id,
       username: user.username,
-      email: user.email,
-    };
-    const token = jwt.sign(payload, privateKey, {
-      algorithm: "RS256",
-      expiresIn: process.env.JWT_EXPIRATION,
-    });
+      email: user.email
+  };
 
-    const refreshToken = await generateRefreshToken(user._id);
+  const token = jwt.sign(payload, privateKey, {
+      algorithm: 'RS256',
+      expiresIn: process.env.JWT_EXPIRATION
+  });
 
-    res.json({ token, refreshToken });
-  } catch (error) {
-    console.error("Error with Google OAuth:", error);
-    res.status(500).json({ message: "Internal Server Error" });
-  }
+  // Generate refresh token
+  const refreshToken = await generateRefreshToken(user._id);
+
+  res.status(200).json({
+      message: 'Authentication successful',
+      token,
+      refreshToken
+  });
+} catch (error) {
+  console.error('Error during authentication:', error);
+  res.status(500).json({ message: 'Authentication failed' });
+}
 };
 
 export const googleLogin = async (req, res) => {
